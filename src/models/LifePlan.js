@@ -28,6 +28,14 @@ const lifePlanSchema = new mongoose.Schema({
     required: [true, 'Please add a description'],
     maxlength: [1000, 'Description cannot be more than 1000 characters'],
     trim: true
+  },
+  completed: {
+    type: Boolean,
+    default: false
+  },
+  completedAt: {
+    type: Date,
+    default: null
   }
 }, {
   timestamps: true,
