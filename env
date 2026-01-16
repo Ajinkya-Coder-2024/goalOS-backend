@@ -3,3 +3,16 @@ JWT_SECRET=your_jwt_secret_key_here_change_in_production
 JWT_EXPIRE=30d
 PORT=5000
 NODE_ENV=development
+
+
+
+MAIL_MAILER=smtp
+MAIL_SCHEME=null
+MAIL_HOST=mail.koptotech.solutions
+MAIL_PORT=465
+MAIL_USERNAME=test@koptotech.solutions
+MAIL_PASSWORD=[hc3tTI@-za+++vA
+MAIL_FROM_ADDRESS=test@koptotech.solutions
+MAIL_FROM_NAME=GoalOS
+FRONTEND_URL=http://localhost:8080
+APP_NAME=GoalOS
