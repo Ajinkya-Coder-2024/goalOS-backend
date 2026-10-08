@@ -27,13 +27,13 @@ exports.getDailySchedule = asyncHandler(async (req, res, next) => {
   date.setHours(0, 0, 0, 0);
 
   let schedule = await DailySchedule.findOne({
-    userId: req.user.id,
+    userId: req.user._id,
     date
   });
 
   if (!schedule) {
     schedule = await DailySchedule.create({
-      userId: req.user.id,
+      userId: req.user._id,
       date,
       timeSlots: []
     });
@@ -103,7 +103,7 @@ exports.updateDailySchedule = asyncHandler(async (req, res, next) => {
     console.log('Validated time slots:', validatedTimeSlots);
     
     const updateData = { 
-      userId: req.user.id,
+      userId: req.user._id,
       date,
       timeSlots: validatedTimeSlots
     };
@@ -111,7 +111,7 @@ exports.updateDailySchedule = asyncHandler(async (req, res, next) => {
     console.log('Update data:', updateData);
     
     const schedule = await DailySchedule.findOneAndUpdate(
-      { userId: req.user.id, date },
+      { userId: req.user._id, date },
       { $set: updateData },
       { 
         new: true,
@@ -155,7 +155,7 @@ exports.getSchedulesInRange = asyncHandler(async (req, res, next) => {
   end.setHours(23, 59, 59, 999);
 
   const schedules = await DailySchedule.find({
-    userId: req.user.id,
+    userId: req.user._id,
     date: {
       $gte: start,
       $lte: end
@@ -199,7 +199,7 @@ exports.updateTimeSlotStatus = asyncHandler(async (req, res, next) => {
 
   const schedule = await DailySchedule.findOneAndUpdate(
     {
-      userId: req.user.id,
+      userId: req.user._id,
       date: scheduleDate,
       'timeSlots._id': slotId
     },

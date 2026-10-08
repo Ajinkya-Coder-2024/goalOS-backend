@@ -6,7 +6,7 @@ const asyncHandler = require('../middleware/async');
 // @route   GET /api/life-plans
 // @access  Private
 exports.getLifePlans = asyncHandler(async (req, res, next) => {
-  const plans = await LifePlan.find({ user: req.user.id }).sort('targetYear');
+  const plans = await LifePlan.find({ user: req.user._id }).sort('targetYear');
   
   res.status(200).json({
     success: true,
@@ -21,7 +21,7 @@ exports.getLifePlans = asyncHandler(async (req, res, next) => {
 exports.getLifePlan = asyncHandler(async (req, res, next) => {
   const plan = await LifePlan.findOne({
     _id: req.params.id,
-    user: req.user.id
+    user: req.user._id
   });
 
   if (!plan) {
@@ -40,17 +40,43 @@ exports.getLifePlan = asyncHandler(async (req, res, next) => {
 // @route   POST /api/life-plans
 // @access  Private
 exports.createLifePlan = asyncHandler(async (req, res, next) => {
-  // Add user to req.body
-  req.body.user = req.user.id;
+  console.debug('[Backend] createLifePlan req.body:', JSON.stringify(req.body, null, 2));
+  console.debug('[Backend] createLifePlan user:', req.user?._id);
+  
+  // Transform frontend data to match backend model
+  const { goal, startDate, endDate, detailItems, ...rest } = req.body;
+  
+  // Build description from goal and detailItems
+  let description = goal?.trim() || '';
+  if (detailItems?.length) {
+    const items = detailItems.map(item => item.trim()).filter(Boolean);
+    if (items.length) {
+      description += (description ? '\n\n' : '') + items.map(item => `• ${item}`).join('\n');
+    }
+  }
+  
+  // Extract targetYear from startDate
+  const targetYear = startDate ? new Date(startDate).getFullYear() : new Date().getFullYear();
+  
+  // Prepare data for model
+  const planData = {
+    ...rest,
+    user: req.user._id,
+    targetYear,
+    description: description || 'Life plan',
+  };
 
   // Validate startAge and endAge
-  if (parseInt(req.body.startAge) >= parseInt(req.body.endAge)) {
+  if (parseInt(planData.startAge) >= parseInt(planData.endAge)) {
+    console.debug('[Backend] Validation failed: endAge <= startAge');
     return next(
       new ErrorResponse('End age must be greater than start age', 400)
     );
   }
 
-  const plan = await LifePlan.create(req.body);
+  const plan = await LifePlan.create(planData);
+
+  console.debug('[Backend] createLifePlan created:', JSON.stringify(plan, null, 2));
 
   res.status(201).json({
     success: true,
@@ -71,21 +97,41 @@ exports.updateLifePlan = asyncHandler(async (req, res, next) => {
   }
 
   // Make sure user is plan owner
-  if (plan.user.toString() !== req.user.id) {
+  if (plan.user.toString() !== req.user._id.toString()) {
     return next(
       new ErrorResponse(`User not authorized to update this plan`, 401)
     );
   }
 
+  // Transform frontend data to match backend model
+  const { goal, startDate, endDate, detailItems, ...rest } = req.body;
+  
+  const updateData = { ...rest };
+  
+  if (goal !== undefined || detailItems !== undefined) {
+    let description = goal?.trim() || plan.description.split('\n\n')[0] || '';
+    if (detailItems !== undefined) {
+      const items = detailItems.map(item => item.trim()).filter(Boolean);
+      if (items.length) {
+        description += (description ? '\n\n' : '') + items.map(item => `• ${item}`).join('\n');
+      }
+    }
+    updateData.description = description || plan.description;
+  }
+  
+  if (startDate !== undefined) {
+    updateData.targetYear = startDate ? new Date(startDate).getFullYear() : plan.targetYear;
+  }
+
   // Validate startAge and endAge if they're being updated
-  if (req.body.startAge && req.body.endAge && 
-      parseInt(req.body.startAge) >= parseInt(req.body.endAge)) {
+  if (updateData.startAge && updateData.endAge && 
+      parseInt(updateData.startAge) >= parseInt(updateData.endAge)) {
     return next(
       new ErrorResponse('End age must be greater than start age', 400)
     );
   }
 
-  plan = await LifePlan.findByIdAndUpdate(req.params.id, req.body, {
+  plan = await LifePlan.findByIdAndUpdate(req.params.id, updateData, {
     new: true,
     runValidators: true
   });
@@ -109,7 +155,7 @@ exports.deleteLifePlan = asyncHandler(async (req, res, next) => {
   }
 
   // Make sure user is plan owner
-  if (plan.user.toString() !== req.user.id) {
+  if (plan.user.toString() !== req.user._id.toString()) {
     return next(
       new ErrorResponse(`User not authorized to delete this plan`, 401)
     );
@@ -130,7 +176,7 @@ exports.getPlansByYearRange = asyncHandler(async (req, res, next) => {
   const { startYear, endYear } = req.params;
   
   const plans = await LifePlan.find({
-    user: req.user.id,
+    user: req.user._id,
     targetYear: { $gte: startYear, $lte: endYear }
   }).sort('targetYear');
 
