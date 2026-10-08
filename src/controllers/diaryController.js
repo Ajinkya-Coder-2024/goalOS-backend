@@ -8,12 +8,12 @@ const asyncHandler = require('../middleware/async');
 // @access  Private
 exports.createDiaryEntry = asyncHandler(async (req, res, next) => {
   // Add user to req.body
-  req.body.user = req.user.id;
+  req.body.user = req.user._id;
 
   const { date, content, goodThings = [], badThings = [] } = req.body;
 
   const diaryEntry = await Diary.create({
-    user: req.user.id,
+    user: req.user._id,
     date: date || Date.now(),
     content,
     goodThings,
@@ -46,7 +46,7 @@ exports.getDiaryEntries = asyncHandler(async (req, res, next) => {
   queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
   
   // Finding resource
-  let query = Diary.find({ ...JSON.parse(queryStr), user: req.user.id });
+  let query = Diary.find({ ...JSON.parse(queryStr), user: req.user._id });
   
   // Select Fields
   if (req.query.select) {
@@ -67,7 +67,7 @@ exports.getDiaryEntries = asyncHandler(async (req, res, next) => {
   const limit = parseInt(req.query.limit, 10) || 20;
   const startIndex = (page - 1) * limit;
   const endIndex = page * limit;
-  const total = await Diary.countDocuments({ user: req.user.id });
+  const total = await Diary.countDocuments({ user: req.user._id });
   
   query = query.skip(startIndex).limit(limit);
   
@@ -103,7 +103,7 @@ exports.getDiaryEntries = asyncHandler(async (req, res, next) => {
 // @route   GET /api/diary/entries/:id
 // @access  Private
 exports.getDiaryEntry = asyncHandler(async (req, res, next) => {
-  const diaryEntry = await Diary.findOne({ _id: req.params.id, user: req.user.id });
+  const diaryEntry = await Diary.findOne({ _id: req.params.id, user: req.user._id });
   
   if (!diaryEntry) {
     return next(
@@ -130,9 +130,9 @@ exports.updateDiaryEntry = asyncHandler(async (req, res, next) => {
   }
   
   // Make sure user is diary entry owner
-  if (diaryEntry.user.toString() !== req.user.id) {
+  if (diaryEntry.user.toString() !== req.user._id.toString()) {
     return next(
-      new ErrorResponse(`User ${req.user.id} is not authorized to update this diary entry`, 401)
+      new ErrorResponse(`User ${req.user._id} is not authorized to update this diary entry`, 401)
     );
   }
   
@@ -171,8 +171,8 @@ exports.deleteDiaryEntry = asyncHandler(async (req, res, next) => {
     }
     
     // Make sure user is diary entry owner
-    if (diaryEntry.user.toString() !== req.user.id) {
-      console.log(`User ${req.user.id} not authorized to delete entry ${req.params.id}`);
+    if (diaryEntry.user.toString() !== req.user._id.toString()) {
+      console.log(`User ${req.user._id} not authorized to delete entry ${req.params.id}`);
       return next(
         new ErrorResponse(`User is not authorized to delete this diary entry`, 401)
       );
@@ -204,7 +204,7 @@ exports.getEntriesByDateRange = asyncHandler(async (req, res, next) => {
   }
   
   const entries = await Diary.find({
-    user: req.user.id,
+    user: req.user._id,
     date: {
       $gte: new Date(startDate),
       $lte: new Date(endDate)
@@ -237,7 +237,7 @@ exports.getEntryByDate = asyncHandler(async (req, res, next) => {
   endOfDay.setHours(23, 59, 59, 999);
   
   const entry = await Diary.findOne({
-    user: req.user.id,
+    user: req.user._id,
     date: {
       $gte: startOfDay,
       $lte: endOfDay

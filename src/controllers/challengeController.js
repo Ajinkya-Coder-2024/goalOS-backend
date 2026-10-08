@@ -14,12 +14,17 @@ const createChallenge = asyncHandler(async (req, res) => {
     throw new Error('Please provide a name for the challenge');
   }
 
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+
   const challenge = await Challenge.create({
     userId,
     name,
     description,
     subjects: subjects || [],
-    status: 'active'
+    status: 'active',
+    startDate: tomorrow
   });
 
   res.status(201).json({
@@ -34,10 +39,18 @@ const createChallenge = asyncHandler(async (req, res) => {
 const getChallenges = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   
+  console.log('=== GET CHALLENGES DEBUG ===');
+  console.log('User ID from req.user._id:', req.user._id);
+  console.log('User ID from req.user.id:', req.user.id);
+  console.log('Query userId:', userId);
+  
   const challenges = await Challenge.find({ 
     userId,
     isDeleted: false 
   }).sort({ createdAt: -1 });
+
+  console.log('Found challenges count:', challenges.length);
+  console.log('Challenges:', challenges);
 
   res.status(200).json({
     success: true,

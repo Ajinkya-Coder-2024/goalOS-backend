@@ -10,7 +10,7 @@ const diaryModel = require("../models/diaryModel");
 // @route   GET /api/dashboard/stats
 // @access  Private
 const getDashboardStats = asyncHandler(async (req, res) => {
-  const userId = req.user.id;
+  const userId = req.user._id;
 
   try {
     // Get current date and month start
@@ -155,7 +155,7 @@ const getMotivationalSlogans = asyncHandler(async (req, res) => {
 // @route   GET /api/dashboard/progress
 // @access  Private
 const getProgressOverview = asyncHandler(async (req, res) => {
-  const userId = req.user.id;
+  const userId = req.user._id;
   const now = new Date();
   const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, 1);
 

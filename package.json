@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/index.js",
-    "seed:user": "node scripts/seedUser.js"
+    "seed:user": "node scripts/seedUser.js",
+    "update:lifeplan-user": "node scripts/updateLifePlanUserId.js"
   },
   "keywords": [],
   "author": "",

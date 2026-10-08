@@ -17,13 +17,13 @@ export const getDailySchedule = asyncHandler(async (req: any, res: Response, nex
   date.setHours(0, 0, 0, 0);
 
   let schedule = await DailySchedule.findOne({
-    userId: req.user.id,
+    userId: req.user._id,
     date
   });
 
   if (!schedule) {
     schedule = await DailySchedule.create({
-      userId: req.user.id,
+      userId: req.user._id,
       date,
       timeSlots: []
     });
@@ -55,7 +55,7 @@ export const updateDailySchedule = asyncHandler(async (req: any, res: Response, 
   }
 
   const schedule = await DailySchedule.findOneAndUpdate(
-    { userId: req.user.id, date },
+    { userId: req.user._id, date },
     { 
       $set: { 
         timeSlots: timeSlots.map((slot: any) => ({
@@ -106,7 +106,7 @@ export const getSchedulesInRange = asyncHandler(async (req: any, res: Response, 
   end.setHours(23, 59, 59, 999);
 
   const schedules = await DailySchedule.find({
-    userId: req.user.id,
+    userId: req.user._id,
     date: {
       $gte: start,
       $lte: end
@@ -150,7 +150,7 @@ export const updateTimeSlotStatus = asyncHandler(async (req: any, res: Response,
 
   const schedule = await DailySchedule.findOneAndUpdate(
     {
-      userId: req.user.id,
+      userId: req.user._id,
       date: scheduleDate,
       'timeSlots._id': slotId
     },

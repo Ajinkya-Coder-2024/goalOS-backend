@@ -63,7 +63,7 @@ exports.createSpecialSchedule = asyncHandler(async (req, res, next) => {
   }
 
   const schedule = await SpecialSchedule.create({
-    userId: req.user.id,
+    userId: req.user._id,
     startDate: start,
     endDate: end,
     tasks: initialTasks,
@@ -81,7 +81,7 @@ exports.createSpecialSchedule = asyncHandler(async (req, res, next) => {
 exports.getSpecialSchedules = asyncHandler(async (req, res, next) => {
   const { startDate, endDate } = req.query;
 
-  const query = { userId: req.user.id };
+  const query = { userId: req.user._id };
 
   if (startDate || endDate) {
     const start = startDate ? new Date(startDate) : null;
@@ -136,7 +136,7 @@ exports.addSpecialTask = asyncHandler(async (req, res, next) => {
 
   const schedule = await SpecialSchedule.findOne({
     _id: id,
-    userId: req.user.id,
+    userId: req.user._id,
   });
 
   if (!schedule) {
@@ -203,7 +203,7 @@ exports.updateSpecialSchedule = asyncHandler(async (req, res, next) => {
   if (update.startDate || update.endDate) {
     const schedule = await SpecialSchedule.findOne({
       _id: id,
-      userId: req.user.id,
+      userId: req.user._id,
     });
 
     if (!schedule) {
@@ -241,7 +241,7 @@ exports.deleteSpecialSchedule = asyncHandler(async (req, res, next) => {
 
   const schedule = await SpecialSchedule.findOneAndDelete({
     _id: id,
-    userId: req.user.id,
+    userId: req.user._id,
   });
 
   if (!schedule) {
@@ -272,7 +272,7 @@ exports.updateSpecialTask = asyncHandler(async (req, res, next) => {
 
   const schedule = await SpecialSchedule.findOne({
     _id: scheduleId,
-    userId: req.user.id,
+    userId: req.user._id,
   });
 
   if (!schedule) {
@@ -324,7 +324,7 @@ exports.deleteSpecialTask = asyncHandler(async (req, res, next) => {
 
   const schedule = await SpecialSchedule.findOne({
     _id: scheduleId,
-    userId: req.user.id,
+    userId: req.user._id,
   });
 
   if (!schedule) {

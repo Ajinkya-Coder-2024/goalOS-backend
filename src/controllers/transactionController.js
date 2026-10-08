@@ -11,7 +11,7 @@ exports.createTransaction = asyncHandler(async (req, res) => {
   const autoCategory = type === 'earning' ? 'General Earning' : 'General Expense';
 
   const transaction = await Transaction.create({
-    user: req.user.id,
+    user: req.user._id,
     type,
     amount,
     description,
@@ -31,7 +31,7 @@ exports.createTransaction = asyncHandler(async (req, res) => {
 exports.getTransaction = asyncHandler(async (req, res) => {
   const transaction = await Transaction.findOne({
     _id: req.params.id,
-    user: req.user.id
+    user: req.user._id
   });
 
   if (!transaction) {
@@ -51,7 +51,14 @@ exports.getTransaction = asyncHandler(async (req, res) => {
 exports.getTransactions = asyncHandler(async (req, res) => {
   const { month, year, type } = req.query;
   
-  let query = { user: req.user.id };
+  console.log('=== GET TRANSACTIONS DEBUG ===');
+  console.log('User ID from req.user._id:', req.user._id);
+  console.log('User ID from req.user.id:', req.user.id);
+  console.log('Month:', month, 'Year:', year, 'Type:', type);
+  
+  let query = { user: req.user._id };
+  
+  console.log('Initial query:', JSON.stringify(query));
   
   if (month && year) {
     const startDate = new Date(year, month - 1, 1);
@@ -61,13 +68,21 @@ exports.getTransactions = asyncHandler(async (req, res) => {
       $gte: startDate,
       $lte: endDate
     };
+    
+    console.log('Date filter added:', { startDate, endDate });
   }
   
   if (type) {
     query.type = type;
+    console.log('Type filter added:', type);
   }
   
+  console.log('Final query:', JSON.stringify(query));
+  
   const transactions = await Transaction.find(query).sort({ date: -1 });
+  
+  console.log('Found transactions count:', transactions.length);
+  console.log('Transactions:', transactions);
   
   res.status(200).json({
     success: true,
@@ -82,7 +97,7 @@ exports.getTransactions = asyncHandler(async (req, res) => {
 exports.getTransactionSummary = asyncHandler(async (req, res) => {
   const { month, year } = req.query;
   
-  let matchQuery = { user: req.user.id };
+  let matchQuery = { user: req.user._id };
   
   if (month && year) {
     const startDate = new Date(year, month - 1, 1);
@@ -139,7 +154,7 @@ exports.updateTransaction = asyncHandler(async (req, res) => {
   }
   
   // Make sure user owns the transaction
-  if (transaction.user.toString() !== req.user.id) {
+  if (transaction.user.toString() !== req.user._id.toString()) {
     res.status(401);
     throw new Error('Not authorized to update this transaction');
   }
@@ -185,7 +200,7 @@ exports.deleteTransaction = asyncHandler(async (req, res) => {
   }
   
   // Make sure user owns the transaction
-  if (transaction.user.toString() !== req.user.id) {
+  if (transaction.user.toString() !== req.user._id.toString()) {
     res.status(401);
     throw new Error('Not authorized to delete this transaction');
   }
